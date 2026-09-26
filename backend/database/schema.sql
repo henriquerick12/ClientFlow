@@ -1,0 +1,38 @@
+CREATE TABLE clientes (
+    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    nome VARCHAR(150) NOT NULL,
+    telefone VARCHAR(20) NOT NULL,
+    cpf VARCHAR(11) NOT NULL UNIQUE,
+    status VARCHAR(10) NOT NULL DEFAULT 'ATIVO'
+        CHECK (status IN ('ATIVO', 'INATIVO')),
+    criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    atualizado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE funcionarios (
+    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    usuario VARCHAR(100) NOT NULL UNIQUE,
+    senha_hash VARCHAR(255) NOT NULL,
+    perfil VARCHAR(20) NOT NULL
+        CHECK (perfil IN ('ATENDENTE', 'ADMINISTRADOR')),
+    criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    atualizado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE OR REPLACE FUNCTION atualizar_data_modificacao()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.atualizado_em = CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_atualizar_clientes
+BEFORE UPDATE ON clientes
+FOR EACH ROW
+EXECUTE FUNCTION atualizar_data_modificacao();
+
+CREATE TRIGGER trigger_atualizar_funcionarios
+BEFORE UPDATE ON funcionarios
+FOR EACH ROW
+EXECUTE FUNCTION atualizar_data_modificacao();
